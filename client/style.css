@@ -1,0 +1,14 @@
+html, body {
+  margin: 0;
+  font-family: monospace;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; }
+
+.container {
+  margin-inline: auto;
+  max-width: 800px;
+  width: 100%;
+  padding: 1rem;
+}

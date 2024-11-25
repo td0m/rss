@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<meta name="theme-color" content="">
+		<link rel="shortcut icon" href="">
+		<link rel="stylesheet" href="/style.css">
+		<title>RSS</title>
+	</head>
+	<body class="container">
+    <script type=module>
+      import { add, h, state, derive, style } from 'https://tdom.dev/vanjs-starter.js'
+
+      const $items = state([])
+
+      const $filters = state({
+        status: "unread"
+      })
+
+      function refetchItems() {
+        fetch("/api/items?"+(new URLSearchParams($filters.val)).toString(), {
+            headers: { 'content-type': 'application/json' },
+          })
+          .then(res => res.json())
+          .then(items => $items.val = items)
+          .catch(err => console.error(err))
+      }
+      refetchItems()
+
+      style(`
+        .item {
+          display: flex;
+          gap: 0.75rem;
+          align-items: center;
+          padding-block: 0.25rem;
+          .item__a {
+            color: inherit;
+            text-decoration: none;
+            &:visited {
+              color: #666;
+            }
+          }
+          .item__icon {
+            width: 16px;
+            aspect-ratio: 1/1;
+          }
+          &[data-status=read] {
+            .item__icon {
+              filter: grayscale(100%);
+            }
+            .item__a {
+              filter: grayscale(100%);
+              text-decoration: line-through;
+              color: #ccc;
+            }
+          }
+        }
+      `)
+      const Item = (item) => {
+        const emojis = {
+          "audio/mpeg": "📻"
+        }
+        const ontoggle = async () => {
+          const status = item.status === "unread" ? "read" : "unread"
+          await fetch(`/api/items/${encodeURIComponent(item.id)}`, {
+            method: "PATCH",
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({status})
+          })
+          $items.val = $items.val.map(it => {
+            if (it.id === item.id) it.status = status
+            return it
+          })
+          // refetchItems()
+        }
+        return h.li({ class: "item", "data-status": item.status },
+          h.img({
+            class: "item__icon",
+            src: item.icon,
+            onclick: ontoggle,
+          }),
+          h.a({
+              class: "item__a",
+              href: item.link,
+              target: "_blank"
+            },
+            item.title,
+          ),
+          item.media.map(m => h.a({
+              href: m.url,
+            },
+            emojis[m.type]
+          ))
+        )
+      }
+
+      style(`
+        .item-list {
+          padding: 0;
+          margin: 0;
+        }
+      `)
+
+      const App = () => {
+        return h.div(
+          h.h3("Feed"),
+          () => h.ul({ class: "item-list" },
+            $items.val.map(it => Item(it))
+          )
+        )
+      }
+
+      add(document.body, App())
+    </script>
+	</body>
+</html>
