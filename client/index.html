@@ -6,6 +6,9 @@
 		<meta http-equiv="X-UA-Compatible" content="ie=edge">
 		<meta name="theme-color" content="">
 		<link rel="shortcut icon" href="">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="/style.css">
 		<title>RSS</title>
 	</head>
@@ -32,9 +35,9 @@
       style(`
         .item {
           display: flex;
-          gap: 0.75rem;
-          align-items: center;
-          padding-block: 0.25rem;
+          gap: 0.5rem;
+          align-items: flex-start;
+          padding-block: 0.1rem;
           .item__a {
             color: inherit;
             text-decoration: none;
@@ -43,7 +46,8 @@
             }
           }
           .item__icon {
-            width: 16px;
+            padding: 0.15em;
+            width: 1.5em;
             aspect-ratio: 1/1;
           }
           &[data-status=read] {
@@ -88,15 +92,18 @@
             },
             item.title,
           ),
-          item.media.map(m => h.a({
-              href: m.url,
-            },
-            emojis[m.type]
-          ))
+          // item.media.map(m => h.a({
+          //     href: m.url,
+          //   },
+          //   emojis[m.type]
+          // ))
         )
       }
 
       style(`
+        .title {
+          text-align: center;
+        }
         .item-list {
           padding: 0;
           margin: 0;
@@ -105,7 +112,7 @@
 
       const App = () => {
         return h.div(
-          h.h3("Feed"),
+          h.h2({ class: "title" }, "Feed"),
           () => h.ul({ class: "item-list" },
             $items.val.map(it => Item(it))
           )
