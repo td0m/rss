@@ -30,6 +30,8 @@ app.patch("/items/:rawId", (req, res) => {
 app.listen({ port: 5852 })
 
 
-cron.schedule('0 6 * * *', async () => {
+await pull()
+ cron.schedule('0 20 * * *', async () => {
+//cron.schedule('0 * * * *', async () => {
   await pull()
 });

@@ -45,6 +45,10 @@
               color: #666;
             }
           }
+          .item__links {
+            display: flex;
+            gap: 1rem;
+          }
           .item__icon {
             padding: 0.15em;
             width: 1.5em;
@@ -62,6 +66,44 @@
           }
         }
       `)
+      const ItemLink = (item) => {
+        let $title = state(item.title)
+        let $expand = state(false)
+        let timeout
+        const onStart = (e) => {
+          e.preventDefault()
+          timeout = setTimeout(() => {
+            clearTimeout(timeout)
+            timeout = null
+            // long
+            console.log("LONG")
+            $expand.val = true
+          }, 500)
+        }
+        const onEnd = e => {
+          clearTimeout(timeout)
+          if (timeout) {
+            // short
+            window.open(item.link, '_blank').focus();
+          }
+        }
+        return h.div(
+          h.a({
+              class: "item__a",
+              // href: item.link,
+              onmousedown: onStart,
+              ontouchstart: onStart,
+              onmouseup: onEnd,
+              ontouchend: onEnd,
+              target: "_blank"
+            },
+            () => $title.val,
+          ),
+          () => $expand.val ? h.div({ class: "item__actions" },
+            item.links.map(link => h.a({href: link.url, target: "_blank"}, link.title)),
+          ) : ""
+        )
+      }
       const Item = (item) => {
         const emojis = {
           "audio/mpeg": "📻"
@@ -85,13 +127,7 @@
             src: item.icon,
             onclick: ontoggle,
           }),
-          h.a({
-              class: "item__a",
-              href: item.link,
-              target: "_blank"
-            },
-            item.title,
-          ),
+          ItemLink(item),
           // item.media.map(m => h.a({
           //     href: m.url,
           //   },
@@ -113,6 +149,7 @@
       const App = () => {
         return h.div(
           h.h2({ class: "title" }, "Feed"),
+          () => $items.val.length === 0 ? h.p("You're all caught up! We'll refresh the feed for you at 8pm every day. Enjoy your day ;)") : "",
           () => h.ul({ class: "item-list" },
             $items.val.map(it => Item(it))
           )

@@ -1,13 +1,16 @@
 import Parser from 'rss-parser';
+import { setTimeout } from 'timers/promises'
 import { repo } from './db.js'
+import { hash } from 'node:crypto';
 
 function md5(text) {
-  return crypto.createHash('md5').update(text).digest('hex')
+  return hash('md5', text, 'hex');
 }
 
 function parseItem(item, feedId) {
   const timestamp = new Date(item.pubDate ?? item.isoDate)
   const media = []
+  const links = []
   if (item.enclosure) {
     media.push({
       type: item.enclosure.type,
@@ -15,11 +18,15 @@ function parseItem(item, feedId) {
       length: item.enclosure.length
     })
   }
+  if (item.comments) {
+    links.push({ url: item.comments, title: `comments` })
+  }
   return {
-    id: feedId + ":" + (item.id ?? item.guid ?? md5(item.link)),
+    id: feedId + ":" + md5(item.id ?? item.guid ?? item.link),
     feedId: feedId,
     title: item.title,
     link: item.link,
+    links,
     timestamp: timestamp.toISOString(),
     status: "unread",
     media,
@@ -32,6 +39,7 @@ export async function pull() {
 
   const feeds = repo.feeds.list({})
   for (let feed of feeds) {
+    await setTimeout(1000)
     try {
       let feedResults = await parser.parseURL(feed.url);
       feedResults.items.forEach(rssItem => {

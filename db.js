@@ -24,7 +24,8 @@ export function init() {
       timestamp TEXT NOT NULL,
       status TEXT NOT NULL,
       media TEXT,
-      raw_data TEXT NOT NULL
+      raw_data TEXT NOT NULL,
+      links TEXT NOT NULL DEFAULT '[]'
     ) STRICT;
   `)
 }
@@ -48,7 +49,10 @@ export const repo = {
       return write`
         INSERT INTO feeds(id, title, url, status, icon)
         VALUES(${id}, ${title}, ${url}, ${status}, ${icon})
-        ON CONFLICT DO NOTHING
+        ON CONFLICT DO UPDATE
+        SET
+          url = ${url},
+          icon = ${icon}
       `
     },
     list({status}) {
@@ -60,13 +64,14 @@ export const repo = {
     }
   },
   items: {
-    upsert({id, title, link, timestamp, status, rawData, feedId, media={}}) {
+    upsert({id, title, link, timestamp, status, rawData, feedId, media={}, links=[]}) {
       write`
-        INSERT INTO items(id, title, link, timestamp, status, raw_data, feed_id, media)
-        VALUES(${id}, ${title}, ${link}, ${timestamp}, ${status}, ${JSON.stringify(rawData)}, ${feedId}, ${JSON.stringify(media)})
+        INSERT INTO items(id, title, link, timestamp, status, raw_data, feed_id, media, links)
+        VALUES(${id}, ${title}, ${link}, ${timestamp}, ${status}, ${JSON.stringify(rawData)}, ${feedId}, ${JSON.stringify(media)}, ${JSON.stringify(links)})
         ON CONFLICT DO UPDATE
         SET
-          media = ${JSON.stringify(media)}
+          media = ${JSON.stringify(media)},
+          links = ${JSON.stringify(links)}
       `
     },
     update({id, title, link, timestamp, status, rawData, feedId}) {
@@ -83,6 +88,7 @@ export const repo = {
         SELECT
           items.id, items.title, items.link, items.timestamp, items.status, items.raw_data as rawData, items.feed_id as feedId,
           items.media,
+          items.links,
           feeds.icon
         FROM items
         INNER JOIN feeds ON feeds.id = items.feed_id
@@ -96,6 +102,7 @@ export const repo = {
       rows.map(row => {
         row.rawData = JSON.parse(row.rawData)
         if (row.media) row.media = JSON.parse(row.media)
+        if (row.links) row.links = JSON.parse(row.links)
       })
       return rows
     },
