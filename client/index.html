@@ -93,34 +93,13 @@
       const ItemLink = (item) => {
         let $title = state(item.title)
         let $expand = derive(() => $expanded.val === item.id)
-        let timeout
-        const onStart = (e) => {
-          e.preventDefault()
-          timeout = setTimeout(() => {
-            clearTimeout(timeout)
-            timeout = null
-            // long
-            console.log("LONG")
-            $expanded.val = item.id
-          }, 500)
-        }
-        const onEnd = e => {
-          clearTimeout(timeout)
-          $expanded.val = item.id
-          if (timeout) {
-            // short
-            // window.open(item.link, '_blank').focus();
-          }
+        const onclick = () => {
+          $expanded.val = $expanded.val === item.id ? null : item.id
         }
         return h.div(
-          h.a({
+          h.span({
               class: "item__a",
-              // href: item.link,
-              onmousedown: onStart,
-              ontouchstart: onStart,
-              onmouseup: onEnd,
-              ontouchend: onEnd,
-              target: "_blank"
+              onclick,
             },
             () => $title.val,
           ),
