@@ -4,6 +4,10 @@ import { sql } from './rawsql.js'
 
 let db
 
+function formatDateForSQLite(date) {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export function init() {
   db = new Sqlite3("app.db")
   db.exec(`
@@ -12,7 +16,8 @@ export function init() {
       title TEXT NOT NULL,
       url TEXT NOT NULL,
       icon TEXT NOT NULL,
-      status TEXT NOT NULL
+      status TEXT NOT NULL,
+      last_fetched_at TEXT
     ) STRICT;
   `)
   db.exec(`
@@ -43,6 +48,10 @@ const many = (literals, ...args) => {
 }
 
 export const repo = {
+  lastFetched() {
+    const rows = many`select max(last_fetched_at) as last from feeds;`
+    return (rows[0].last)
+  },
   feeds: {
     upsert({id, title, url, status, icon}) {
       if (!title) title = id
@@ -55,10 +64,19 @@ export const repo = {
           icon = ${icon}
       `
     },
+    update(id, { lastFetchedAt }) {
+      return write`
+        UPDATE feeds
+        SET
+          last_fetched_at = ${formatDateForSQLite(lastFetchedAt)}
+        WHERE
+          id = ${id}
+      `
+    },
     list({status}) {
       return many`
         SELECT
-          id, title, url, status, icon
+          id, title, url, status, icon, last_fetched_at
         FROM feeds
       `
     }

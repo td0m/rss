@@ -39,18 +39,23 @@ export async function pull() {
 
   const feeds = repo.feeds.list({})
   for (let feed of feeds) {
-    await setTimeout(1000)
+    await setTimeout(300)
     try {
       let feedResults = await parser.parseURL(feed.url);
       feedResults.items.forEach(rssItem => {
         const item = parseItem(rssItem, feed.id)
         repo.items.upsert(item)
       });
+      repo.feeds.update(feed.id, {
+        ...feed,
+        lastFetchedAt: new Date()
+      })
       console.log(`fetched ${feedResults.items.length} from ${feed.id}`)
     } catch(err) {
       console.log("FAILED TO FETCH: ", feed.id, err)
     }
   }
+  console.log(repo.lastFetched())
 }
 
 

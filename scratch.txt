@@ -1,0 +1,3 @@
+TODO
+- lookup each link on hackernews
+- browser extension: find hn link, build table of contents

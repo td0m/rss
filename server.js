@@ -9,6 +9,13 @@ initDb()
 const app = Fastify({
 })
 
+app.get("/feeds", (req, res) => {
+  const lastFetch = repo.lastFetched()
+  res.send({
+    lastFetch,
+  })
+})
+
 app.get("/items", (req, res) => {
   const { status } = req.query
   const items = repo.items.list({

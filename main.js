@@ -5,10 +5,10 @@ import { pull } from './pull.js'
 initDb()
 
 repo.feeds.upsert({
-  id: "hn-search-neovim",
-  url: "https://hnrss.org/newest?q=neovim",
+  id: "taylor-town",
+  url: "https://taylor.town/feed.xml",
   status: "enabled",
-  icon: icons.hn
+  icon: "http://taylor.town/favicon.ico"
 })
 
 await pull()
