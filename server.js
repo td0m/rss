@@ -38,7 +38,6 @@ app.listen({ port: 5852 })
 
 
 await pull()
- cron.schedule('0 20 * * *', async () => {
-//cron.schedule('0 * * * *', async () => {
+  cron.schedule('0 9 * * *', async () => {
   await pull()
 });

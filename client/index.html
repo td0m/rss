@@ -163,7 +163,7 @@
         return h.div(
           h.h2({ class: "title" }, "Feed"),
           h.div({ class: "last-fetch" }, () => `updated ${relativeDate($feeds.val?.lastFetch ?? '')}`),
-          () => $items.val.length === 0 ? h.p("You're all caught up! We'll refresh the feed for you at 8pm every day. Enjoy your day ;)") : "",
+          () => $items.val.length === 0 ? h.p("You're all caught up! We'll refresh the feed for you every day. Enjoy your day ;)") : "",
           () => h.ul({ class: "item-list" },
             $items.val.map(it => Item(it))
           )
