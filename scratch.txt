@@ -1,3 +1,5 @@
 TODO
 - lookup each link on hackernews
 - browser extension: find hn link, build table of contents
+- visited style if any sublinks visited
+- try out server rendering?
