@@ -42,7 +42,7 @@ export function sql(literals, ...args) {
           const arg = args[i - 1];
           if (arg instanceof RawSQL) {
               stmt.append(arg);
-          } else {
+          } else if (i > 0) {
               stmt.addParam(arg);
           }
         }
