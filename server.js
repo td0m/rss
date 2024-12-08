@@ -34,10 +34,17 @@ app.patch("/items/:rawId", (req, res) => {
   res.send(patched)
 })
 
+app.post("/feeds:refresh", async (req, res) => {
+  pull()
+    .then(console.log)
+    .catch(console.error)
+  res.status(204)
+})
+
 app.listen({ port: 5852 })
 
 
-await pull()
-  cron.schedule('0 9 * * *', async () => {
-  await pull()
-});
+//await pull()
+//  cron.schedule('0 9 * * *', async () => {
+//  await pull()
+//});

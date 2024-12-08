@@ -5,10 +5,10 @@ import { pull } from './pull.js'
 initDb()
 
 repo.feeds.upsert({
-  id: "taylor-town",
-  url: "https://taylor.town/feed.xml",
+  id: "nathan-oxenfeld",
+  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCSPEYMIPRZLHsrn3jVAeFuA",
   status: "enabled",
-  icon: "http://taylor.town/favicon.ico"
+  icon: "https://yt3.googleusercontent.com/ytc/AIdro_ld0tWo3_jvRuWNhTY1b-qgIMqYb3Po5WdOS1hZcBSQgQ=s160-c-k-c0x00ffffff-no-rj"
 })
 
 await pull()

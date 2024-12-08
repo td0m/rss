@@ -25,15 +25,20 @@
 
       const $feeds = state({})
 
-      function refetchFeeds() {
-        fetch("/api/feeds?", {
+      async function refresh() {
+        await fetch("/api/feeds:refresh", {
+          method: "POST",
+        })
+      }
+
+      async function refetchFeeds() {
+        return fetch("/api/feeds?", {
             headers: { 'content-type': 'application/json' },
           })
           .then(res => res.json())
           .then(res => $feeds.val = res)
           .catch(err => console.error(err))
       }
-      await refetchFeeds()
 
       function refetchItems() {
         fetch("/api/items?"+(new URLSearchParams($filters.val)).toString(), {
@@ -159,18 +164,31 @@
         }
       `)
 
-      const App = () => {
+      style(`
+        footer {
+          display: flex;
+          justify-content: center;
+          margin-top: 4rem;
+          padding: 2rem;
+        }
+      `)
+
+      const App = async () => {
+        await refetchFeeds()
         return h.div(
           h.h2({ class: "title" }, "Feed"),
           h.div({ class: "last-fetch" }, () => `updated ${relativeDate($feeds.val?.lastFetch ?? '')}`),
           () => $items.val.length === 0 ? h.p("You're all caught up! We'll refresh the feed for you every day. Enjoy your day ;)") : "",
           () => h.ul({ class: "item-list" },
             $items.val.map(it => Item(it))
+          ),
+          h.footer(
+            h.button({ class: "x-button", onclick: refresh }, "refresh")
           )
         )
       }
 
-      add(document.body, App())
+      add(document.body, await App())
     </script>
 	</body>
 </html>
