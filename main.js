@@ -5,10 +5,10 @@ import { pull } from './pull.js'
 initDb()
 
 repo.feeds.upsert({
-  id: "nathan-oxenfeld",
-  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCSPEYMIPRZLHsrn3jVAeFuA",
+  id: "imalittlemole",
+  url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCtt4v5GIUDQihYqgHufJhZQ",
   status: "enabled",
-  icon: "https://yt3.googleusercontent.com/ytc/AIdro_ld0tWo3_jvRuWNhTY1b-qgIMqYb3Po5WdOS1hZcBSQgQ=s160-c-k-c0x00ffffff-no-rj"
+  icon: "https://yt3.googleusercontent.com/pOCjvHAkSlLwvVzKjVvHvEh11Lc1x-ZNxSYSvZg8vE4QJu_bmcPidHiOoOlUZpSeU8C1EyXwKA=s160-c-k-c0x00ffffff-no-rj"
 })
 
 await pull()

@@ -1,3 +1,4 @@
 TODO
 - lookup each link on hackernews (tt had something)
 - downloads
+- double up as an index of all old pages (require manually being able to add)
