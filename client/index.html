@@ -85,7 +85,7 @@
             ),
             m("div",
               { style: "display: flex; gap: 0.5rem" },
-              ["dopamine", "learn", "listen"].map(it => 
+              ["learn", "dopamine", "listen"].map(it =>
                 m("button", { onclick: () => move(item.id, it) }, it),
               ),
               m("button", { style: "margin-left: auto", onclick: () => move(item.id, "archive") }, "archive")
@@ -200,8 +200,8 @@
             m("h2.title", "Feed"),
             m("div.last-fetch", `updated ${relativeDate(state.feeds?.lastFetch ?? '')}`),
             m(Section, { folder: "new", alwaysShow: true }),
-            m(Section, { folder: "dopamine" }),
             m(Section, { folder: "learn" }),
+            m(Section, { folder: "dopamine" }),
             m(Section, { folder: "listen" }),
             m(Section, { folder: "archive" }),
             m("footer",
