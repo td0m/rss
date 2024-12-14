@@ -29,7 +29,7 @@
       import { m, mount, redraw } from 'mithril'
 
       let showDialog = false
-      let appState = {
+      let state = {
         feeds: [],
         items: [],
       }
@@ -46,7 +46,7 @@
           })
           .then(res => res.json())
           .then(res => {
-            appState.feeds = res
+            state.feeds = res
           })
           .catch(err => console.error(err))
       }
@@ -60,7 +60,7 @@
             headers: { 'content-type': 'application/json' },
           })
           .then(res => res.json())
-          .then(items => appState.items = items)
+          .then(items => state.items = items)
           .catch(err => console.error(err))
       }
       await refetchFeeds()
@@ -88,7 +88,7 @@
               ["dopamine", "learn", "listen"].map(it => 
                 m("button", { onclick: () => move(item.id, it) }, it),
               ),
-              m("button", { style: "margin-left: auto", onclick: () => toggle(item) }, "archive")
+              m("button", { style: "margin-left: auto", onclick: () => move(item.id, "archive") }, "archive")
             )
           )
         }
@@ -96,7 +96,7 @@
 
       const Nav = {
         view() {
-          const items = appState.items
+          const items = state.items
             .filter(it => it.folder === "new" && it.status === "unread")
           return m("div",
             m("button.x-button", { disabled: items.length === 0, onclick: () => showDialog = true }, "power through new"),
@@ -118,7 +118,7 @@
         if (expanded === item.id) {
           expanded = null
         }
-        appState.items = appState.items.map(it => {
+        state.items = state.items.map(it => {
           if (it.id === item.id) it.status = status
           return it
         })
@@ -181,10 +181,13 @@
       const Section = {
         view({attrs}) {
           const { folder, alwaysShow } = attrs
-          const items = appState.items.filter(item => item.folder === folder)
+          const items = state.items.filter(item => item.folder === folder)
           const show = alwaysShow || items.length > 0
           return m("div.section",
-            show && m("h3.section", folder),
+            show && m("div", { style: "display: flex; align-items: center;" },
+              m("h3.section", folder),
+              folder === "new" && m("button.x-button", { style: "margin-left: auto", onclick: refresh }, "refresh")
+            ),
             show && items.length > 0 && m("ul.item-list", items.map(item => m(Item, {item, key: item.id}))),
           )
         }
@@ -195,13 +198,13 @@
           return m("div",
             m(Nav),
             m("h2.title", "Feed"),
-            m("div.last-fetch", `updated ${relativeDate(appState.feeds?.lastFetch ?? '')}`),
+            m("div.last-fetch", `updated ${relativeDate(state.feeds?.lastFetch ?? '')}`),
             m(Section, { folder: "new", alwaysShow: true }),
             m(Section, { folder: "dopamine" }),
             m(Section, { folder: "learn" }),
             m(Section, { folder: "listen" }),
+            m(Section, { folder: "archive" }),
             m("footer",
-              m("button.x-button", { onclick: refresh }, "refresh")
             ),
           )
         }

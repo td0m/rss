@@ -83,15 +83,11 @@ export const repo = {
     }
   },
   items: {
-    upsert({id, title, link, timestamp, status, rawData, feedId, media={}, links=[], folder}) {
+    insertOrDoNothing({id, title, link, timestamp, status, rawData, feedId, media={}, links=[], folder}) {
       write`
         INSERT INTO items(id, title, link, timestamp, status, raw_data, feed_id, media, links)
         VALUES(${id}, ${title}, ${link}, ${timestamp}, ${status}, ${JSON.stringify(rawData)}, ${feedId}, ${JSON.stringify(media)}, ${JSON.stringify(links)})
-        ON CONFLICT DO UPDATE
-        SET
-          media = ${JSON.stringify(media)},
-          links = ${JSON.stringify(links)},
-          folder = ${folder}
+        ON CONFLICT DO NOTHING
       `
     },
     update({id, title, link, timestamp, status, rawData, feedId, folder}) {

@@ -29,6 +29,7 @@ function parseItem(item, feedId) {
     links,
     timestamp: timestamp.toISOString(),
     status: "unread",
+    folder: "new",
     media,
     rawData: item
   }
@@ -44,7 +45,7 @@ export async function pull() {
       let feedResults = await parser.parseURL(feed.url);
       feedResults.items.forEach(rssItem => {
         const item = parseItem(rssItem, feed.id)
-        repo.items.upsert(item)
+        repo.items.insertOrDoNothing(item)
       });
       repo.feeds.update(feed.id, {
         ...feed,
