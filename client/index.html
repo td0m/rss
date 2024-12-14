@@ -138,7 +138,7 @@
             expanded = expanded === item.id ? null : item.id
           }
           const expand = item.id === expanded
-          return m("div",
+          return m("div.item-link",
             m("span", {
                 class: "item__a",
                 onclick,
@@ -147,6 +147,7 @@
             ),
             expand ? m("div.item__actions", {},
               [{title: (new URL(item.link)).hostname.replace(/^www\./, ''), url: item.link}, ...item.links].map(link => m("a", {href: link.url, target: "_blank"}, link.title)),
+              m("button", { style: "margin-left: auto", onclick: () => move(item.id, "new") }, "back to new")
             ) : ""
           )
         }
@@ -207,6 +208,9 @@
       }
 
       style(`
+        .item-link {
+          width: 100%;
+        }
         .item {
           display: flex;
           gap: 0.5rem;
@@ -235,6 +239,7 @@
           .item__actions {
             display: flex;
             gap: 0.5rem;
+            padding-right: 0.25rem;
           }
           &[data-status=read] {
             opacity: 0.4;
