@@ -168,11 +168,11 @@
               onclick: () => toggle(item),
             }),
             m(ItemLink, {item}),
-            item.media.map(m => m("a",
+            item.media.map(media => m("a",
               {
-                href: m.url,
+                href: media.url,
               },
-              emojis[m.type]
+              emojis[media.type]
             ))
           )
         }
