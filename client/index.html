@@ -11,19 +11,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&display=swap" rel="stylesheet">
 		<link rel="stylesheet" href="/style.css">
 		<title>RSS</title>
+    <script type="importmap">
+      {
+        "imports": {
+          "mithril": "https://esm.sh/mithril@2.2.11"
+        }
+      }
+    </script>
 	</head>
 	<body class="container">
+    <div id="nav"></div>
+    <div id="app"></div>
     <script type=module>
-      import { add, h, state, derive, style, classes } from 'https://tdom.dev/vanjs-starter.js'
+      import { style, classes } from 'https://tdom.dev/vanjs-starter.js'
       import { relativeDate } from 'https://tdom.dev/format-date.js'
 
-      const $items = state([])
+      import { m, mount, redraw } from 'mithril'
 
-      const $filters = state({
-        status: "unread"
-      })
-
-      const $feeds = state({})
+      let showDialog = false
+      let appState = {
+        feeds: [],
+        items: [],
+      }
 
       async function refresh() {
         await fetch("/api/feeds:refresh", {
@@ -36,19 +45,166 @@
             headers: { 'content-type': 'application/json' },
           })
           .then(res => res.json())
-          .then(res => $feeds.val = res)
+          .then(res => {
+            appState.feeds = res
+          })
           .catch(err => console.error(err))
       }
 
+      const filters = {
+        status: "unread"
+      }
+
       function refetchItems() {
-        fetch("/api/items?"+(new URLSearchParams($filters.val)).toString(), {
+        return fetch("/api/items?"+(new URLSearchParams(filters)).toString(), {
             headers: { 'content-type': 'application/json' },
           })
           .then(res => res.json())
-          .then(items => $items.val = items)
+          .then(items => appState.items = items)
           .catch(err => console.error(err))
       }
+      await refetchFeeds()
       await refetchItems()
+
+      async function move(itemId, folder) {
+        await fetch(`/api/items/${encodeURIComponent(itemId)}`, {
+          method: "PATCH",
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({folder})
+        })
+        await refetchItems()
+        redraw()
+      }
+
+      const ItemMover = {
+        view({attrs}) {
+          const { item } = attrs
+          return m("div",
+            m("div",
+              m(Item, { item: item }),
+            ),
+            m("div",
+              { style: "display: flex; gap: 0.5rem" },
+              ["dopamine", "learn", "listen"].map(it => 
+                m("button", { onclick: () => move(item.id, it) }, it),
+              ),
+              m("button", { style: "margin-left: auto", onclick: () => toggle(item) }, "archive")
+            )
+          )
+        }
+      }
+
+      const Nav = {
+        view() {
+          const items = appState.items
+            .filter(it => it.folder === "new" && it.status === "unread")
+          return m("div",
+            m("button.x-button", { disabled: items.length === 0, onclick: () => showDialog = true }, "power through new"),
+            m("dialog.x-dialog",
+              {
+                open: showDialog && items.length > 0,
+                style: "width: 400px; z-index: 10; background: white"
+              },
+              m("h1", `Power through new`),
+              m("div", `0/${items.length}`),
+              items.length > 0 && m(ItemMover, { item: items[0] })
+            )
+          )
+        }
+      }
+
+      const toggle = async (item) => {
+        const status = item.status === "unread" ? "read" : "unread"
+        if (expanded === item.id) {
+          expanded = null
+        }
+        appState.items = appState.items.map(it => {
+          if (it.id === item.id) it.status = status
+          return it
+        })
+        await fetch(`/api/items/${encodeURIComponent(item.id)}`, {
+          method: "PATCH",
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({status})
+        })
+        // await refetchItems()
+      }
+
+      let expanded = null
+      const ItemLink = {
+        view({attrs}) {
+          const { item } = attrs
+          const onclick = () => {
+            expanded = expanded === item.id ? null : item.id
+          }
+          const expand = item.id === expanded
+          return m("div",
+            m("span", {
+                class: "item__a",
+                onclick,
+              },
+              item.title,
+            ),
+            expand ? m("div.item__actions", {},
+              [{title: (new URL(item.link)).hostname.replace(/^www\./, ''), url: item.link}, ...item.links].map(link => m("a", {href: link.url, target: "_blank"}, link.title)),
+            ) : ""
+          )
+        }
+      }
+
+      const Item = {
+        view({attrs}) {
+          const { item } = attrs
+          const emojis = {
+            "audio/mpeg": "📻"
+          }
+          return m("li.item", {
+              class: classes(expanded === item.id && "item--expanded"),
+              "data-status": item.status
+            },
+            m("img.item__icon", {
+              src: item.icon,
+              onclick: () => toggle(item),
+            }),
+            m(ItemLink, {item}),
+            item.media.map(m => m("a",
+              {
+                href: m.url,
+              },
+              emojis[m.type]
+            ))
+          )
+        }
+      }
+
+      const Section = {
+        view({attrs}) {
+          const { folder, alwaysShow } = attrs
+          const items = appState.items.filter(item => item.folder === folder)
+          const show = alwaysShow || items.length > 0
+          return m("div.section",
+            show && m("h3.section", folder),
+            show && items.length > 0 && m("ul.item-list", items.map(item => m(Item, {item, key: item.id}))),
+          )
+        }
+      }
+
+      const App2 = {
+        view() {
+          return m("div",
+            m(Nav),
+            m("h2.title", "Feed"),
+            m("div.last-fetch", `updated ${relativeDate(appState.feeds?.lastFetch ?? '')}`),
+            m(Section, { folder: "new", alwaysShow: true }),
+            m(Section, { folder: "dopamine" }),
+            m(Section, { folder: "learn" }),
+            m(Section, { folder: "listen" }),
+            m("footer",
+              m("button.x-button", { onclick: refresh }, "refresh")
+            ),
+          )
+        }
+      }
 
       style(`
         .item {
@@ -94,60 +250,6 @@
         }
       `)
 
-      let $expanded = state(null)
-      const ItemLink = (item) => {
-        let $title = state(item.title)
-        let $expand = derive(() => $expanded.val === item.id)
-        const onclick = () => {
-          $expanded.val = $expanded.val === item.id ? null : item.id
-        }
-        return h.div(
-          h.span({
-              class: "item__a",
-              onclick,
-            },
-            () => $title.val,
-          ),
-          () => $expand.val ? h.div({ class: "item__actions" },
-            [{title: (new URL(item.link)).hostname.replace(/^www\./, ''), url: item.link}, ...item.links].map(link => h.a({href: link.url, target: "_blank"}, link.title)),
-          ) : ""
-        )
-      }
-      const Item = (item) => {
-        const emojis = {
-          "audio/mpeg": "📻"
-        }
-        const ontoggle = async () => {
-          const status = item.status === "unread" ? "read" : "unread"
-          if ($expanded.val === item.id) {
-            $expanded.val = null
-          }
-          await fetch(`/api/items/${encodeURIComponent(item.id)}`, {
-            method: "PATCH",
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({status})
-          })
-          $items.val = $items.val.map(it => {
-            if (it.id === item.id) it.status = status
-            return it
-          })
-          // refetchItems()
-        }
-        return h.li({ class: () => classes("item", $expanded.val === item.id && "item--expanded"), "data-status": item.status },
-          h.img({
-            class: "item__icon",
-            src: item.icon,
-            onclick: ontoggle,
-          }),
-          ItemLink(item),
-          // item.media.map(m => h.a({
-          //     href: m.url,
-          //   },
-          //   emojis[m.type]
-          // ))
-        )
-      }
-
       style(`
         .title {
           text-align: center;
@@ -172,23 +274,7 @@
           padding: 2rem;
         }
       `)
-
-      const App = async () => {
-        await refetchFeeds()
-        return h.div(
-          h.h2({ class: "title" }, "Feed"),
-          h.div({ class: "last-fetch" }, () => `updated ${relativeDate($feeds.val?.lastFetch ?? '')}`),
-          () => $items.val.length === 0 ? h.p("You're all caught up! We'll refresh the feed for you every day. Enjoy your day ;)") : "",
-          () => h.ul({ class: "item-list" },
-            $items.val.map(it => Item(it))
-          ),
-          h.footer(
-            h.button({ class: "x-button", onclick: refresh }, "refresh")
-          )
-        )
-      }
-
-      add(document.body, await App())
+      mount(document.querySelector("#nav"), App2)
     </script>
 	</body>
 </html>

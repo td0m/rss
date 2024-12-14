@@ -28,6 +28,7 @@ export function init() {
       link TEXT NOT NULL,
       timestamp TEXT NOT NULL,
       status TEXT NOT NULL,
+      folder TEXT NOT NULL,
       media TEXT,
       raw_data TEXT NOT NULL,
       links TEXT NOT NULL DEFAULT '[]'
@@ -82,21 +83,23 @@ export const repo = {
     }
   },
   items: {
-    upsert({id, title, link, timestamp, status, rawData, feedId, media={}, links=[]}) {
+    upsert({id, title, link, timestamp, status, rawData, feedId, media={}, links=[], folder}) {
       write`
         INSERT INTO items(id, title, link, timestamp, status, raw_data, feed_id, media, links)
         VALUES(${id}, ${title}, ${link}, ${timestamp}, ${status}, ${JSON.stringify(rawData)}, ${feedId}, ${JSON.stringify(media)}, ${JSON.stringify(links)})
         ON CONFLICT DO UPDATE
         SET
           media = ${JSON.stringify(media)},
-          links = ${JSON.stringify(links)}
+          links = ${JSON.stringify(links)},
+          folder = ${folder}
       `
     },
-    update({id, title, link, timestamp, status, rawData, feedId}) {
+    update({id, title, link, timestamp, status, rawData, feedId, folder}) {
       write`
         UPDATE items
         SET
-          status = ${status}
+          status = ${status},
+          folder = ${folder}
         WHERE
           id = ${id}
       `
@@ -107,6 +110,7 @@ export const repo = {
           items.id, items.title, items.link, items.timestamp, items.status, items.raw_data as rawData, items.feed_id as feedId,
           items.media,
           items.links,
+          items.folder,
           feeds.icon
         FROM items
         INNER JOIN feeds ON feeds.id = items.feed_id
